@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_file
 import sqlite3
 import pandas as pd
 import numpy as np
@@ -86,21 +86,26 @@ def get_recent_draws(n=10):
 def get_prediction_history():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM predictions ORDER BY created_at DESC LIMIT 20')
+    cursor.execute('SELECT * FROM predictions ORDER BY created_at DESC')
     rows = cursor.fetchall()
     conn.close()
     
-    results = []
+    period_map = {}
     for row in rows:
-        results.append({
-            'id': row['id'],
-            'period': row['period'],
-            'prediction': row['prediction'],
-            'result': row['result'],
-            'status': row['status'],
-            'created_at': row['created_at']
-        })
-    return results
+        period = row['period']
+        if period not in period_map:
+            period_map[period] = {
+                'id': row['id'],
+                'period': row['period'],
+                'prediction': row['prediction'],
+                'result': row['result'],
+                'status': row['status'],
+                'created_at': row['created_at']
+            }
+    
+    results = list(period_map.values())
+    results.sort(key=lambda x: x['created_at'], reverse=True)
+    return results[:10]
 
 def save_prediction(period, prediction, result=None, status='pending'):
     conn = get_db_connection()
@@ -127,13 +132,16 @@ def get_statistics():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute('SELECT COUNT(*) as total FROM predictions')
+    latest_draw = get_latest_draw()
+    current_period = latest_draw['period'] if latest_draw else 0
+    
+    cursor.execute('SELECT COUNT(*) as total FROM predictions WHERE period <= ?', (current_period,))
     total = cursor.fetchone()['total']
     
-    cursor.execute("SELECT COUNT(*) as checked FROM predictions WHERE status != 'pending'")
+    cursor.execute("SELECT COUNT(*) as checked FROM predictions WHERE period <= ? AND status != 'pending'", (current_period,))
     checked = cursor.fetchone()['checked']
     
-    cursor.execute("SELECT COUNT(*) as correct FROM predictions WHERE status = 'correct'")
+    cursor.execute("SELECT COUNT(*) as correct FROM predictions WHERE period <= ? AND status = 'correct'", (current_period,))
     correct = cursor.fetchone()['correct']
     
     conn.close()
@@ -150,6 +158,12 @@ def get_statistics():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/simple')
+def simple_index():
+    import os
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'index.html')
+    return send_file(file_path)
 
 @app.route('/api/latest')
 def api_latest():
@@ -180,73 +194,77 @@ def api_statistics():
         logger.error(f"Error getting statistics: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
 
-@app.route('/api/predict', methods=['POST'])
+def predict_logic():
+    """预测逻辑，供 POST 和 GET 请求共用"""
+    model = load_model()
+    if model is None:
+        return {'success': False, 'error': 'Model not loaded'}
+    
+    latest = get_latest_draw()
+    if latest is None:
+        return {'success': False, 'error': 'No latest draw data'}
+    
+    conn = get_db_connection()
+    df = pd.read_sql_query('SELECT * FROM lottery_history ORDER BY period', conn)
+    conn.close()
+    
+    if len(df) < 50:
+        return {'success': False, 'error': 'Insufficient data for prediction'}
+    
+    features = build_features(df)
+    last_features = [features[-1]]
+    
+    proba = model.predict_proba(last_features)[0]
+    
+    zodiac_probs = []
+    for i, prob in enumerate(proba):
+        zodiac_num = i + 1
+        zodiac_name = ZODIAC_NUM_TO_NAME.get(zodiac_num, str(zodiac_num))
+        zodiac_probs.append({
+            'zodiac_num': zodiac_num,
+            'zodiac_name': zodiac_name,
+            'probability': float(prob),
+            'element': ELEMENT_MAP.get(zodiac_name, ''),
+            'color': COLOR_MAP.get(zodiac_name, '')
+        })
+    
+    zodiac_probs.sort(key=lambda x: x['probability'], reverse=True)
+    
+    top3 = zodiac_probs[:3]
+    next_period = latest['period'] + 1
+    
+    prediction_text = ','.join([z['zodiac_name'] for z in top3])
+    save_prediction(next_period, prediction_text)
+    
+    confidence = top3[0]['probability'] * 100
+    
+    analysis = [
+        f"{top3[0]['zodiac_name']} 的预测概率为 {top3[0]['probability']*100:.2f}%，在所有生肖中排名最高",
+        f"与第二名 {top3[1]['zodiac_name']} 的概率差距为 {(top3[0]['probability']-top3[1]['probability'])*100:.2f}%",
+        f"该生肖五行属{top3[0]['element']}，对应{top3[0]['color']}波",
+        "模型基于历史数据统计、时序特征和五行波色关联进行预测"
+    ]
+    
+    return {
+        'success': True,
+        'data': {
+            'prediction': {
+                'next_period': next_period,
+                'confidence': confidence,
+                'recommended': top3[0],
+                'top3': top3,
+                'all': zodiac_probs,
+                'analysis': analysis
+            },
+            'timestamp': datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+        }
+    }
+
+@app.route('/api/predict', methods=['POST', 'GET'])
 def api_predict():
     try:
-        model = load_model()
-        if model is None:
-            return jsonify({'success': False, 'error': 'Model not loaded'})
-        
-        latest = get_latest_draw()
-        if latest is None:
-            return jsonify({'success': False, 'error': 'No latest draw data'})
-        
-        conn = get_db_connection()
-        df = pd.read_sql_query('SELECT * FROM lottery_history ORDER BY period', conn)
-        conn.close()
-        
-        if len(df) < 50:
-            return jsonify({'success': False, 'error': 'Insufficient data for prediction'})
-        
-        features = build_features(df)
-        last_features = [features[-1]]
-        
-        proba = model.predict_proba(last_features)[0]
-        
-        zodiac_probs = []
-        for i, prob in enumerate(proba):
-            zodiac_num = i + 1
-            zodiac_name = ZODIAC_NUM_TO_NAME.get(zodiac_num, str(zodiac_num))
-            zodiac_probs.append({
-                'zodiac_num': zodiac_num,
-                'zodiac_name': zodiac_name,
-                'probability': float(prob),
-                'element': ELEMENT_MAP.get(zodiac_name, ''),
-                'color': COLOR_MAP.get(zodiac_name, '')
-            })
-        
-        zodiac_probs.sort(key=lambda x: x['probability'], reverse=True)
-        
-        top3 = zodiac_probs[:3]
-        next_period = latest['period'] + 1
-        
-        prediction_text = ','.join([z['zodiac_name'] for z in top3])
-        save_prediction(next_period, prediction_text)
-        
-        confidence = top3[0]['probability'] * 100
-        
-        analysis = [
-            f"{top3[0]['zodiac_name']} 的预测概率为 {top3[0]['probability']*100:.2f}%，在所有生肖中排名最高",
-            f"与第二名 {top3[1]['zodiac_name']} 的概率差距为 {(top3[0]['probability']-top3[1]['probability'])*100:.2f}%",
-            f"该生肖五行属{top3[0]['element']}，对应{top3[0]['color']}波",
-            "模型基于历史数据统计、时序特征和五行波色关联进行预测"
-        ]
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'prediction': {
-                    'next_period': next_period,
-                    'confidence': confidence,
-                    'recommended': top3[0],
-                    'top3': top3,
-                    'all': zodiac_probs,
-                    'analysis': analysis
-                },
-                'timestamp': datetime.now().strftime('%Y/%m/%d %H:%M:%S')
-            }
-        })
-        
+        result = predict_logic()
+        return jsonify(result)
     except Exception as e:
         logger.error(f"Error making prediction: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
@@ -368,4 +386,4 @@ def build_features(df):
     return features
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5003)
+    app.run(debug=True, host='0.0.0.0', port=5008)

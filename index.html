@@ -99,33 +99,24 @@
         // 加载预测数据
         async function loadPrediction() {
             try {
-                // 由于是静态页面，我们直接使用模拟数据
-                // 在实际项目中，这里应该通过API调用后端获取数据
-                const predictionData = [
-                    { zodiac: "马", probability: "0.1158" },
-                    { zodiac: "鼠", probability: "0.1137" },
-                    { zodiac: "猪", probability: "0.1066" },
-                    { zodiac: "兔", probability: "0.0898" },
-                    { zodiac: "羊", probability: "0.0871" },
-                    { zodiac: "虎", probability: "0.0839" },
-                    { zodiac: "龙", probability: "0.0798" },
-                    { zodiac: "猴", probability: "0.0774" },
-                    { zodiac: "鸡", probability: "0.0679" },
-                    { zodiac: "牛", probability: "0.0607" },
-                    { zodiac: "狗", probability: "0.0592" },
-                    { zodiac: "蛇", probability: "0.0581" }
-                ];
+                const response = await fetch('/api/predict');
+                const data = await response.json();
                 
-                const container = document.getElementById('prediction-container');
-                let html = '<table class="prediction-table">';
-                html += '<tr><th>排名</th><th>生肖</th><th>预测概率</th></tr>';
-                
-                predictionData.forEach((item, index) => {
-                    html += `<tr><td>${index + 1}</td><td>${item.zodiac}</td><td>${(parseFloat(item.probability) * 100).toFixed(2)}%</td></tr>`;
-                });
-                
-                html += '</table>';
-                container.innerHTML = html;
+                if (data.success) {
+                    const predictionData = data.data.prediction.all;
+                    const container = document.getElementById('prediction-container');
+                    let html = '<table class="prediction-table">';
+                    html += '<tr><th>排名</th><th>生肖</th><th>预测概率</th></tr>';
+                    
+                    predictionData.forEach((item, index) => {
+                        html += `<tr><td>${index + 1}</td><td>${item.zodiac_name}</td><td>${(item.probability * 100).toFixed(2)}%</td></tr>`;
+                    });
+                    
+                    html += '</table>';
+                    container.innerHTML = html;
+                } else {
+                    document.getElementById('prediction-container').innerHTML = '<div class="error">加载预测数据失败</div>';
+                }
             } catch (error) {
                 document.getElementById('prediction-container').innerHTML = '<div class="error">加载预测数据失败</div>';
                 console.error(error);
@@ -135,22 +126,23 @@
         // 加载最近开奖数据
         async function loadRecentDraws() {
             try {
-                // 模拟数据
-                const recentData = [
-                    { period: "2026093", zodiac: "兔", date: "2026-04-03" },
-                    { period: "2026092", zodiac: "牛", date: "2026-04-02" },
-                    { period: "2026091", zodiac: "马", date: "2026-04-01" }
-                ];
+                const response = await fetch('/api/recent/3');
+                const data = await response.json();
                 
-                const container = document.getElementById('recent-container');
-                let html = '<div class="recent-draws">';
-                
-                recentData.forEach(item => {
-                    html += `<div class="draw-item">期号: ${item.period}, 生肖: ${item.zodiac}, 日期: ${item.date}</div>`;
-                });
-                
-                html += '</div>';
-                container.innerHTML = html;
+                if (data.success) {
+                    const recentData = data.data;
+                    const container = document.getElementById('recent-container');
+                    let html = '<div class="recent-draws">';
+                    
+                    recentData.forEach(item => {
+                        html += `<div class="draw-item">期号: ${item.period}, 生肖: ${item.zodiac}, 日期: ${item.date}</div>`;
+                    });
+                    
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    document.getElementById('recent-container').innerHTML = '<div class="error">加载最近开奖数据失败</div>';
+                }
             } catch (error) {
                 document.getElementById('recent-container').innerHTML = '<div class="error">加载最近开奖数据失败</div>';
                 console.error(error);
@@ -160,28 +152,29 @@
         // 加载统计数据
         async function loadStats() {
             try {
-                // 模拟数据
-                const stats = {
-                    totalRecords: 458,
-                    year2025: 365,
-                    year2026: 93,
-                    dateRange: "2025-01-01 到 2026-04-03",
-                    periodRange: "2025001 到 2026093",
-                    latestPeriod: "2026093",
-                    latestZodiac: "兔",
-                    latestDate: "2026-04-03"
-                };
+                const [latestResp, statsResp] = await Promise.all([
+                    fetch('/api/latest'),
+                    fetch('/api/statistics')
+                ]);
                 
-                const container = document.getElementById('stats-container');
-                let html = '<div class="stats">';
-                html += `<div class="stat-item">总记录数: ${stats.totalRecords}条</div>`;
-                html += `<div class="stat-item">2025年记录数: ${stats.year2025}条</div>`;
-                html += `<div class="stat-item">2026年记录数: ${stats.year2026}条</div>`;
-                html += `<div class="stat-item">日期范围: ${stats.dateRange}</div>`;
-                html += `<div class="stat-item">期号范围: ${stats.periodRange}</div>`;
-                html += `<div class="stat-item">最新期号: ${stats.latestPeriod} (${stats.latestZodiac}, ${stats.latestDate})</div>`;
-                html += '</div>';
-                container.innerHTML = html;
+                const latestData = await latestResp.json();
+                const statsData = await statsResp.json();
+                
+                if (latestData.success && statsData.success) {
+                    const latest = latestData.data;
+                    const stats = statsData.data;
+                    const container = document.getElementById('stats-container');
+                    let html = '<div class="stats">';
+                    html += `<div class="stat-item">总预测: ${stats.total}次</div>`;
+                    html += `<div class="stat-item">已核对: ${stats.checked}次</div>`;
+                    html += `<div class="stat-item">命中: ${stats.correct}次</div>`;
+                    html += `<div class="stat-item">准确率: ${stats.accuracy.toFixed(1)}%</div>`;
+                    html += `<div class="stat-item">最新期号: ${latest.period} (${latest.zodiac}, ${latest.date})</div>`;
+                    html += '</div>';
+                    container.innerHTML = html;
+                } else {
+                    document.getElementById('stats-container').innerHTML = '<div class="error">加载统计数据失败</div>';
+                }
             } catch (error) {
                 document.getElementById('stats-container').innerHTML = '<div class="error">加载统计数据失败</div>';
                 console.error(error);

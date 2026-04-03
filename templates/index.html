@@ -5,13 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>生肖开奖预测系统</title>
     <style>
+        :root {
+            --bg-gradient-1: #7B68EE;
+            --bg-gradient-2: #6B5CE7;
+            --bg-gradient-3: #5A4BD1;
+            --text-color: white;
+            --card-bg: rgba(255, 255, 255, 0.12);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --time-opacity: 0.85;
+            --nav-bg: rgba(107, 92, 231, 0.95);
+            --nav-border: rgba(255, 255, 255, 0.1);
+            --nav-btn-bg: rgba(255, 255, 255, 0.2);
+            --nav-btn-hover: rgba(255, 255, 255, 0.3);
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-gradient-1: #1a1a2e;
+                --bg-gradient-2: #16213e;
+                --bg-gradient-3: #0f0f23;
+                --text-color: #e0e0e0;
+                --card-bg: rgba(0, 0, 0, 0.3);
+                --card-border: rgba(255, 255, 255, 0.15);
+                --time-opacity: 0.75;
+                --nav-bg: rgba(22, 33, 62, 0.95);
+                --nav-border: rgba(255, 255, 255, 0.15);
+                --nav-btn-bg: rgba(255, 255, 255, 0.15);
+                --nav-btn-hover: rgba(255, 255, 255, 0.25);
+            }
+        }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(180deg, #7B68EE 0%, #6B5CE7 50%, #5A4BD1 100%);
+            background: linear-gradient(180deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
             min-height: 100vh;
             padding: 16px;
-            color: white;
+            color: var(--text-color);
         }
         .container { max-width: 100%; margin: 0 auto; }
         
@@ -32,16 +62,16 @@
         .header-icon { font-size: 1.2rem; }
         .header-time {
             font-size: clamp(0.75rem, 2.5vw, 0.9rem);
-            opacity: 0.85;
+            opacity: var(--time-opacity);
         }
         
         .card {
-            background: rgba(255, 255, 255, 0.12);
+            background: var(--card-bg);
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 16px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
         }
         
         .latest-card {
@@ -486,8 +516,8 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s ease;
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            gap: 8px;
         }
         .history-item.correct {
             border-color: rgba(74, 222, 128, 0.5);
@@ -501,17 +531,17 @@
             border-color: rgba(251, 191, 36, 0.5);
             background: rgba(251, 191, 36, 0.1);
         }
-        .history-header {
+        .history-row-1 {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 8px;
-            min-width: 0;
         }
-        .history-info-row {
+        .history-row-2 {
             display: flex;
             align-items: center;
-            gap: 8px;
-            min-width: 0;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         .history-time {
             font-size: 0.75rem;
@@ -548,38 +578,16 @@
             background: rgba(239, 68, 68, 0.3);
             color: #FCA5A5;
         }
-        .history-content {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            min-width: 0;
-        }
-        .history-prediction,
-        .history-actual {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
-            white-space: nowrap;
-            min-width: 0;
-        }
         .pred-label,
         .actual-label {
             opacity: 0.7;
             flex-shrink: 0;
+            font-size: 0.75rem;
         }
         .pred-value,
         .actual-value {
             font-weight: 500;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            min-width: 0;
-        }
-        .actual-zodiac {
-            font-weight: bold;
-            color: #60A5FA;
+            font-size: 0.85rem;
         }
         
         .bottom-nav {
@@ -587,13 +595,13 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(107, 92, 231, 0.95);
+            background: var(--nav-bg);
             backdrop-filter: blur(10px);
             padding: 12px 16px;
             display: flex;
             justify-content: center;
             gap: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid var(--nav-border);
         }
         .nav-item {
             display: flex;
@@ -608,9 +616,9 @@
             font-weight: 500;
         }
         .nav-btn {
-            background: rgba(255, 255, 255, 0.2);
+            background: var(--nav-btn-bg);
             border: none;
-            color: white;
+            color: var(--text-color);
             padding: 10px 32px;
             border-radius: 24px;
             font-size: 0.95rem;
@@ -619,10 +627,224 @@
             transition: all 0.2s;
         }
         .nav-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--nav-btn-hover);
         }
         
         .bottom-spacer { height: 80px; }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+            .card {
+                padding: 14px;
+                margin-bottom: 12px;
+                border-radius: 12px;
+            }
+            .header {
+                margin-bottom: 12px;
+            }
+            .stats-grid {
+                flex-direction: row;
+                flex-wrap: nowrap;
+            }
+            .stat-item {
+                padding: 8px 4px;
+            }
+            .stat-label {
+                font-size: 0.7rem;
+            }
+            .stat-value {
+                font-size: 1rem;
+            }
+            .top3-container {
+                flex-direction: row;
+                flex-wrap: nowrap;
+            }
+            .top-item {
+                padding: 12px 8px;
+            }
+            .top-name {
+                font-size: 1.2rem;
+            }
+            .top-attrs {
+                font-size: 0.7rem;
+            }
+            .top-prob {
+                font-size: 0.9rem;
+            }
+            .all-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+            .all-item {
+                padding: 8px 4px;
+            }
+            .all-name {
+                font-size: 0.95rem;
+            }
+            .all-prob {
+                font-size: 0.8rem;
+            }
+            .history-item {
+                padding: 12px;
+            }
+            .history-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            .history-prediction,
+            .history-actual {
+                font-size: 0.85rem;
+            }
+            .bottom-nav {
+                padding: 10px 12px;
+                gap: 16px;
+            }
+            .nav-btn {
+                padding: 8px 24px;
+                font-size: 0.9rem;
+            }
+            .latest-content {
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+            }
+            .latest-info {
+                gap: 10px;
+            }
+            .latest-period {
+                font-size: 0.8rem;
+            }
+            .latest-attrs {
+                font-size: 0.75rem;
+            }
+            .latest-badge {
+                padding: 4px 10px;
+                font-size: 0.75rem;
+            }
+            .history-item {
+                padding: 8px 10px;
+            }
+            .history-row-1 {
+                gap: 6px;
+            }
+            .history-row-2 {
+                gap: 8px;
+            }
+            .pred-label,
+            .actual-label {
+                font-size: 0.7rem;
+            }
+            .pred-value,
+            .actual-value {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            .card {
+                padding: 12px;
+                margin-bottom: 10px;
+            }
+            .header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            .header-title {
+                font-size: 1.1rem;
+            }
+            .stats-grid {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 6px;
+            }
+            .stat-item {
+                padding: 6px 2px;
+            }
+            .stat-label {
+                font-size: 0.65rem;
+            }
+            .stat-value {
+                font-size: 0.9rem;
+            }
+            .all-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+            }
+            .all-item {
+                padding: 6px 3px;
+            }
+            .all-name {
+                font-size: 0.85rem;
+            }
+            .all-prob {
+                font-size: 0.75rem;
+            }
+            .top-name {
+                font-size: 1rem;
+            }
+            .top3-container {
+                flex-direction: row;
+                flex-wrap: nowrap;
+                gap: 8px;
+            }
+            .top-item {
+                padding: 10px 6px;
+            }
+            .top-attrs {
+                font-size: 0.65rem;
+            }
+            .top-prob {
+                font-size: 0.8rem;
+            }
+            .latest-zodiac {
+                font-size: 1.5rem;
+            }
+            .latest-content {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+            }
+            .latest-info {
+                gap: 8px;
+            }
+            .latest-period {
+                font-size: 0.75rem;
+            }
+            .latest-attrs {
+                font-size: 0.7rem;
+            }
+            .latest-badge {
+                padding: 3px 8px;
+                font-size: 0.7rem;
+            }
+            .history-item {
+                padding: 6px 8px;
+            }
+            .history-row-1 {
+                gap: 4px;
+            }
+            .history-row-2 {
+                gap: 6px;
+            }
+            .pred-label,
+            .actual-label {
+                font-size: 0.65rem;
+            }
+            .pred-value,
+            .actual-value {
+                font-size: 0.75rem;
+            }
+            .history-time {
+                font-size: 0.7rem;
+            }
+        }
         
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -651,7 +873,7 @@
                     <div class="latest-zodiac" id="latestZodiac">-</div>
                     <div class="latest-attrs" id="latestAttrs">-</div>
                 </div>
-                <div class="latest-badge">🎉 最新开奖</div>
+                <div class="latest-badge">刷新</div>
             </div>
         </div>
         
@@ -659,7 +881,7 @@
             <div class="control-header">
                 <div class="control-title">
                     <span>📊</span>
-                    <span>预测统计</span>
+                    <span>实际有效预测统计</span>
                 </div>
             </div>
             <div class="stats-grid">
@@ -819,7 +1041,7 @@
                 
                 if (data.success) {
                     const draw = data.data;
-                    document.getElementById('latestPeriod').textContent = '期 ' + draw.period;
+                    document.getElementById('latestPeriod').textContent = '第' + draw.period + '期';
                     document.getElementById('latestZodiac').textContent = draw.zodiac;
                     document.getElementById('latestAttrs').textContent = `五行: ${draw.element} · 波色: ${draw.color}`;
                 }
@@ -866,22 +1088,16 @@
                         }[item.status] || item.status;
                         
                         historyItem.innerHTML = `
-                            <div class="history-header">
-                                <div class="history-info-row">
-                                    <div class="history-time">${item.created_at}</div>
-                                    <span class='period-badge'>期 ${item.period}</span>
-                                </div>
-                                <span class='status-badge ${item.status}'>${statusText}</span>
+                            <div class="history-row-1">
+                                <span class='period-badge'>第${item.period}期</span>
+                                <div class="history-time">${item.created_at.substring(0, 16)}</div>
                             </div>
-                            <div class="history-content">
-                                <div class="history-prediction">
-                                    <span class="pred-label">预测:</span>
-                                    <span class="pred-value">${item.prediction}</span>
-                                </div>
-                                <div class="history-actual">
-                                    <span class="actual-label">实际:</span>
-                                    <span class="actual-value">${item.result || '-'}</span>
-                                </div>
+                            <div class="history-row-2">
+                                <span class="pred-label">预测:</span>
+                                <span class="pred-value">${item.prediction}</span>
+                                <span class="actual-label">实际:</span>
+                                <span class="actual-value">${item.result || '-'}</span>
+                                <span class='status-badge ${item.status}'>${statusText}</span>
                             </div>
                         `;
                         
