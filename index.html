@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生肖开奖预测</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 0;
+        }
+        .prediction-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .prediction-table th,
+        .prediction-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        .prediction-table th {
+            background-color: #f2f2f2;
+        }
+        .recent-draws {
+            margin-top: 10px;
+        }
+        .draw-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .draw-item:last-child {
+            border-bottom: none;
+        }
+        .stats {
+            margin-top: 10px;
+        }
+        .stat-item {
+            margin: 5px 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>生肖开奖预测</h1>
+        
+        <div class="section">
+            <h2>下一期预测概率</h2>
+            <div id="prediction-container" class="loading">加载中...</div>
+        </div>
+        
+        <div class="section">
+            <h2>最近3期开奖数据</h2>
+            <div id="recent-container" class="loading">加载中...</div>
+        </div>
+        
+        <div class="section">
+            <h2>数据统计</h2>
+            <div id="stats-container" class="loading">加载中...</div>
+        </div>
+    </div>
+    
+    <script>
+        // 加载预测数据
+        async function loadPrediction() {
+            try {
+                // 由于是静态页面，我们直接使用模拟数据
+                // 在实际项目中，这里应该通过API调用后端获取数据
+                const predictionData = [
+                    { zodiac: "马", probability: "0.1158" },
+                    { zodiac: "鼠", probability: "0.1137" },
+                    { zodiac: "猪", probability: "0.1066" },
+                    { zodiac: "兔", probability: "0.0898" },
+                    { zodiac: "羊", probability: "0.0871" },
+                    { zodiac: "虎", probability: "0.0839" },
+                    { zodiac: "龙", probability: "0.0798" },
+                    { zodiac: "猴", probability: "0.0774" },
+                    { zodiac: "鸡", probability: "0.0679" },
+                    { zodiac: "牛", probability: "0.0607" },
+                    { zodiac: "狗", probability: "0.0592" },
+                    { zodiac: "蛇", probability: "0.0581" }
+                ];
+                
+                const container = document.getElementById('prediction-container');
+                let html = '<table class="prediction-table">';
+                html += '<tr><th>排名</th><th>生肖</th><th>预测概率</th></tr>';
+                
+                predictionData.forEach((item, index) => {
+                    html += `<tr><td>${index + 1}</td><td>${item.zodiac}</td><td>${(parseFloat(item.probability) * 100).toFixed(2)}%</td></tr>`;
+                });
+                
+                html += '</table>';
+                container.innerHTML = html;
+            } catch (error) {
+                document.getElementById('prediction-container').innerHTML = '<div class="error">加载预测数据失败</div>';
+                console.error(error);
+            }
+        }
+        
+        // 加载最近开奖数据
+        async function loadRecentDraws() {
+            try {
+                // 模拟数据
+                const recentData = [
+                    { period: "2026093", zodiac: "兔", date: "2026-04-03" },
+                    { period: "2026092", zodiac: "牛", date: "2026-04-02" },
+                    { period: "2026091", zodiac: "马", date: "2026-04-01" }
+                ];
+                
+                const container = document.getElementById('recent-container');
+                let html = '<div class="recent-draws">';
+                
+                recentData.forEach(item => {
+                    html += `<div class="draw-item">期号: ${item.period}, 生肖: ${item.zodiac}, 日期: ${item.date}</div>`;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                document.getElementById('recent-container').innerHTML = '<div class="error">加载最近开奖数据失败</div>';
+                console.error(error);
+            }
+        }
+        
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                // 模拟数据
+                const stats = {
+                    totalRecords: 458,
+                    year2025: 365,
+                    year2026: 93,
+                    dateRange: "2025-01-01 到 2026-04-03",
+                    periodRange: "2025001 到 2026093",
+                    latestPeriod: "2026093",
+                    latestZodiac: "兔",
+                    latestDate: "2026-04-03"
+                };
+                
+                const container = document.getElementById('stats-container');
+                let html = '<div class="stats">';
+                html += `<div class="stat-item">总记录数: ${stats.totalRecords}条</div>`;
+                html += `<div class="stat-item">2025年记录数: ${stats.year2025}条</div>`;
+                html += `<div class="stat-item">2026年记录数: ${stats.year2026}条</div>`;
+                html += `<div class="stat-item">日期范围: ${stats.dateRange}</div>`;
+                html += `<div class="stat-item">期号范围: ${stats.periodRange}</div>`;
+                html += `<div class="stat-item">最新期号: ${stats.latestPeriod} (${stats.latestZodiac}, ${stats.latestDate})</div>`;
+                html += '</div>';
+                container.innerHTML = html;
+            } catch (error) {
+                document.getElementById('stats-container').innerHTML = '<div class="error">加载统计数据失败</div>';
+                console.error(error);
+            }
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPrediction();
+            loadRecentDraws();
+            loadStats();
+        });
+    </script>
+</body>
+</html>
