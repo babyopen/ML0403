@@ -1,6 +1,6 @@
 # 生肖开奖预测系统
 
-版本号: V0.0.01
+版本号: V0.0.02
 
 ## 项目简介
 
@@ -14,6 +14,8 @@
 - **预测功能**：预测下一期的开奖结果，显示置信度和概率分布
 - **历史记录**：记录预测历史，支持后续核对和统计
 - **前端界面**：现代化的 Web 界面，支持响应式设计
+- **自适应黑暗模式**：根据系统设置自动切换亮色/深色模式
+- **双前端页面**：主前端页面和备用简单前端页面
 
 ## 技术栈
 
@@ -32,8 +34,9 @@ ml模型1.0/
 ├── retrain_model.py        # 模型重新训练脚本
 ├── init_db.py              # 数据库初始化脚本
 ├── lottery_history.csv     # 示例数据
+├── index.html              # 备用简单前端页面
 ├── templates/
-│   └── index.html          # 前端页面
+│   └── index.html          # 主前端页面
 ├── check_2026_data.py      # 数据检查脚本
 ├── check_all_records.py    # 记录检查脚本
 ├── clean_duplicate_data.py # 数据清理脚本
@@ -74,12 +77,20 @@ python3 retrain_model.py
 python3 zodiac_lottery_prediction.py
 ```
 
+## 前端页面
+
+- **主页面**：http://localhost:5008/ - 现代化响应式界面
+- **备用页面**：http://localhost:5008/simple - 简单界面
+
 ## API 接口
 
+- `GET /` - 主前端页面
+- `GET /simple` - 备用前端页面
 - `GET /api/latest` - 获取最新开奖数据
 - `GET /api/recent/<n>` - 获取最近 n 期开奖数据
 - `GET /api/statistics` - 获取预测统计信息
 - `POST /api/predict` - 执行预测
+- `GET /api/predict` - 执行预测（GET 版本）
 - `GET /api/history` - 获取预测历史记录
 
 ## 数据来源
@@ -104,10 +115,26 @@ python3 zodiac_lottery_prediction.py
 | 狗 | 11, 23, 35, 47 | 土 | 绿 |
 | 猪 | 12, 24, 36, 48 | 水 | 蓝 |
 
+## 版本历史
+
+### V0.0.02 (2026-04-04)
+- 修复预测数据对不上问题
+- 添加自适应黑暗模式
+- 添加备用简单前端页面
+- 优化历史记录显示格式
+- 优化预测统计为实际有效统计
+- 优化所有页面的响应式布局
+
+### V0.0.01 (2026-04-03)
+- 初始版本发布
+- 基础预测功能
+- 现代化前端界面
+- 数据获取和存储
+
 ## 开发团队
 
 - 项目创建：AI Assistant
-- 版本：V0.0.01
+- 版本：V0.0.02
 
 ## 许可证
 
